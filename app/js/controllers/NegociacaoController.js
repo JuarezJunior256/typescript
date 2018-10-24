@@ -1,4 +1,4 @@
-System.register(["../views/index", "../models/Negociacoes", "../models/Negociacao", "../helpers/decorators/index", "../service/NegociacaoService"], function (exports_1, context_1) {
+System.register(["../views/index", "../models/Negociacoes", "../models/Negociacao", "../helpers/decorators/index", "../service/NegociacaoService", "../helpers/Ultis"], function (exports_1, context_1) {
     "use strict";
     var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
         var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -7,7 +7,7 @@ System.register(["../views/index", "../models/Negociacoes", "../models/Negociaca
         return c > 3 && r && Object.defineProperty(target, key, r), r;
     };
     var __moduleName = context_1 && context_1.id;
-    var index_1, Negociacoes_1, Negociacao_1, index_2, NegociacaoService_1, NegociacaoController, DiaDaSemana;
+    var index_1, Negociacoes_1, Negociacao_1, index_2, NegociacaoService_1, Ultis_1, NegociacaoController, DiaDaSemana;
     return {
         setters: [
             function (index_1_1) {
@@ -24,6 +24,9 @@ System.register(["../views/index", "../models/Negociacoes", "../models/Negociaca
             },
             function (NegociacaoService_1_1) {
                 NegociacaoService_1 = NegociacaoService_1_1;
+            },
+            function (Ultis_1_1) {
+                Ultis_1 = Ultis_1_1;
             }
         ],
         execute: function () {
@@ -43,6 +46,7 @@ System.register(["../views/index", "../models/Negociacoes", "../models/Negociaca
                     }
                     const negociacao = new Negociacao_1.Negociacao(new Date(this._inputData.val().replace(/-/g, ',')), parseInt(this._inputQuantidade.val()), parseFloat(this._inputValor.val()));
                     this._negociacoes.adiciona(negociacao);
+                    Ultis_1.imprime(negociacao, this._negociacoes);
                     this._negociacoesView.update(this._negociacoes);
                     this._mensagemView.update('Negociação adicionada com sucesso!');
                 }
@@ -50,15 +54,15 @@ System.register(["../views/index", "../models/Negociacoes", "../models/Negociaca
                     return data.getDay() != DiaDaSemana.Sabado && data.getDay() != DiaDaSemana.Domingo;
                 }
                 importaDados() {
-                    function isOk(res) {
+                    this._service
+                        .obterNegociaoces(res => {
                         if (res.ok) {
                             return res;
                         }
                         else {
                             throw new Error(res.statusText);
                         }
-                    }
-                    this._service.obterNegociaoces(isOk)
+                    })
                         .then((negociaoces) => {
                         negociaoces.forEach(negociacao => this._negociacoes.adiciona(negociacao));
                         this._negociacoesView.update(this._negociacoes);

@@ -8,13 +8,13 @@
     "compile": "tsc",
     "watch": "tsc -w",
     "server": "lite-server --baseDir=app",
-    "start":  "concurrently \"npm run watch\" \"npm run server\""
-
+    "start": "concurrently \"npm run watch\" \"npm run server\""
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/jquery": "^2.0.42",
+    "@types/node": "^10.12.0",
     "concurrently": "^3.4.0",
     "lite-server": "^2.3.0",
     "typescript": "^2.3.2"

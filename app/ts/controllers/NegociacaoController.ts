@@ -4,6 +4,8 @@ import { Negociacao }      from '../models/Negociacao';
 import { NegociacaoParcial } from '../models/NegociacaoParcial';
 import { domInject, throttle }      from '../helpers/decorators/index';
 import { NegociacaoService }      from '../service/NegociacaoService';
+import { handlerFunction }      from '../service/NegociacaoService';
+import { imprime }      from '../helpers/Ultis';
 
 
 export class NegociacaoController{
@@ -17,9 +19,16 @@ export class NegociacaoController{
     @domInject('#valor')
     private _inputValor: JQuery;
     
+    //classe negociacoes
     private _negociacoes =     new Negociacoes();
+
+    //classe negociacoesView
     private _negociacoesView = new NegociacoesView('#negociacoesView');
+
+    //classe mensagemView
     private _mensagemView    = new MensagemView('#mensagemView');
+
+    //classe de serviço para consumir api
     private _service = new NegociacaoService();
 
     constructor(){
@@ -30,57 +39,77 @@ export class NegociacaoController{
     }
 
     @throttle()
-    adiciona(){
+    adiciona(){ //Adicionando uma negociacao 
 
+        //pegando data atual 
         let data = new Date(this._inputData.val().replace(/-/g, ','));
 
+        //validação para saber se é um dia util(segunda a sexta)
         if(this._ehDiaUtil(data)){
 
             this._mensagemView.update('Somente negociações em dias úteis, por favor!');
             return 
-
         }
             
+       //criando uma negociacao 
        const negociacao = new Negociacao(
             new Date(this._inputData.val().replace(/-/g, ',')), 
             parseInt(this._inputQuantidade.val()), 
             parseFloat(this._inputValor.val())
         );
 
-            this._negociacoes.adiciona(negociacao);
+            
 
+            //adicionando uma negociacao no array
+            this._negociacoes.adiciona(negociacao);
+            
+            imprime(negociacao, this._negociacoes);
+
+            //adicionando o array de negociacao na tabela html
             this._negociacoesView.update(this._negociacoes);
 
+            //mensagem para quando uma negociação é adicionada na tabela
             this._mensagemView.update('Negociação adicionada com sucesso!');
     }
 
+        //metodo para verificar se é dia útil
         private _ehDiaUtil(data: Date){
             return data.getDay() != DiaDaSemana.Sabado && data.getDay() != DiaDaSemana.Domingo;  
         }
 
         @throttle()
-        importaDados(){
-           
-            function isOk(res: Response){
+        async importaDados(){
 
-                if(res.ok){
-                    return res;
-                }else{
-                    throw new Error(res.statusText);
-                }
+            try{
 
-            }
-
-            this._service.obterNegociaoces(isOk)
-            .then((negociaoces: Negociacao[]) => {
-                
-                negociaoces.forEach(negociacao =>
-                 this._negociacoes.adiciona(negociacao));
-                
-                this._negociacoesView.update(this._negociacoes);
-                
+                const negociacoesParaImportar = await this._service
+                .obterNegociaoces(res => {
+    
+                    if(res.ok){
+                        return res;
+                    }else{
+                        throw new Error(res.statusText);
+                    }
+    
                 });
+                    
+                    const negociacoesJaImportadas = this._negociacoes.paraArray();
+    
+                    negociacoesParaImportar
+                        .filter(negociacao => 
+                            !negociacoesJaImportadas.some(jaImportada => 
+                                negociacao.ehIgual(jaImportada)))
+                        .forEach(negociacao => 
+                        this._negociacoes.adiciona(negociacao));
+    
+                    this._negociacoesView.update(this._negociacoes);
 
+            }catch(err){
+                this._mensagemView.update(err.message);
+            }
+           
+
+                
         }
 }
 
